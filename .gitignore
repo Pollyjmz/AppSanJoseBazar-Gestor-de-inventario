@@ -1,3 +1,27 @@
+# Entornos virtuales (el venv)
+venv/
+env/
+.env
+ENV/
+
+# Archivos de configuración de Python (basura temporal)
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Carpeta de documentación que mencionaste
+doc/
+
+# Bases de datos SQLite (si llegas a usar una local)
+*.sqlite3
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
+
+# Configuración de editores (VS Code, PyCharm)
+.vscode/
+.idea/
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
