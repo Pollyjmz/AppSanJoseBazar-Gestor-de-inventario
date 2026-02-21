@@ -1,0 +1,40 @@
+Nonse estantomandon en cuenta la posibilidsd de pago en monedas extranjera
+
+Log denquien ingresa el producto o quie lo vendio
+
+
+Articulos
+
+codigoPrenda, VarChar (30), PK ,N
+Cantidad, int
+Emprendimiento, VarChar(20) 
+Precio , Int, 
+Fechaingreso, DateTime, 
+Vendido Tinytiny(1), 
+Fechavendido,DateTime,
+Categoria , VarChar
+Talla, VarChar(),
+FOTO, longblob
+Comentario, Text
+
+
+Clientes
+
+Codigocliente, int, PrimaryKey ,n
+Nombre VarChar ,
+Numtelefono , int
+Correo, VarChar(20)
+SignonZodiacal VarChar
+TallaPantalo, VarChar 
+TallaCamisa, VarChar 
+Tallazapatos , VarChar 
+Comentario, Text 
+
+
+
+Ventas
+CodigoVenta, int, PK , n
+FechaVenta, DateTime,
+PK codigocliente 
+PK codigoPrenda 
+Totalvendido, int,
