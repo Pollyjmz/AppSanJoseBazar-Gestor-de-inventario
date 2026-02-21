@@ -5,7 +5,7 @@ def crear_conexion():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="Turmalina777"
+        password="xxxx"
     )
 
 def crear_base_datos():
