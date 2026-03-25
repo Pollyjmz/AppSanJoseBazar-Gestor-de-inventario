@@ -25,30 +25,14 @@ class InventarioActualWindow(tk.Toplevel):
 
         self.search_entry.bind("<Return>", self.buscar_articulos)
 
-        # Checkboxes de “apartados / vendidos”
-        self.var_apartado = tk.BooleanVar()
-        self.var_vendido = tk.BooleanVar()
-
-        ttk.Checkbutton(
-                top_frame,
-                text="apartados",
-                variable=self.var_apartado,
-                command=self.filtrar_por_estado
-            ).pack(side="left", padx=10)
-
-        ttk.Checkbutton(
-                top_frame,
-                text="vendidos",
-                variable=self.var_vendido,
-                command=self.filtrar_por_estado
-            ).pack(side="left", padx=10)
+        
 
         # ===== TABLA =====
         table_frame = tk.Frame(self, bg="#8c8c8c")
         table_frame.pack(fill="both", expand=True, padx=40)
 
        # En el __init__ de InventarioActualWindow
-        columns = ("id_articulo", "nombre", "cantidad_disponible", "id_vendedor", "precio", "estado", "id_categoria", "id_tipo", "talla", "comentario") 
+        columns = ("id_articulo", "nombre", "cantidad_disponible", "id_vendedor", "precio", "estado", "id_categoria","nombre_categoria", "id_tipo","tipo", "talla", "comentario") 
         self.table = ttk.Treeview(table_frame, columns=columns, show="headings", height=20)
         for col in columns:
             self.table.heading(col, text=col)        
@@ -91,14 +75,19 @@ class InventarioActualWindow(tk.Toplevel):
                 a.cantidad_disponible,
                 a.id_vendedor, 
                 a.precio, 
-                a.estado, 
+                a.estado,
+                a.id_categoria,            
                 c.nombre_categoria, -- Cambiamos el ID por el Nombre
+                a.id_tipo,
                 t.tipo,      -- Cambiamos el ID por el Nombre
                 a.talla, 
                 a.comentario
             FROM articulos a
             LEFT JOIN categorias c ON a.id_categoria = c.id_categoria
             LEFT JOIN tipos t ON a.id_tipo = t.id_tipo
+            WHERE a.estado != 'eliminado'
+            
+
           """  
 
     def obtener_inventario(self):
@@ -119,30 +108,30 @@ class InventarioActualWindow(tk.Toplevel):
         self.cargar_inventario(self.obtener_inventario())
         self.articulo_seleccionado = None
 
-
-
     def seleccionar_articulo(self, event):
-        seleccion = self.table.selection()
-        if not seleccion:
-            self.articulo_seleccionado = None
-            return
+        seleccion = self.table.selection() 
+        if not seleccion: 
+            self.articulo_seleccionado = None 
+            return 
+        item = self.table.item(seleccion[0]) 
+        v= item["values"]
 
-        item = self.table.item(seleccion[0])
-        v = item["values"]
-
-        # Mapeo exacto según el orden del SELECT en _get_base_query
-        self.articulo_seleccionado = {
+        self.articulo_seleccionado = { 
             "id_articulo": v[0],
             "nombre": v[1],
             "cantidad_disponible": v[2],
             "id_vendedor": v[3],
             "precio": v[4],
             "estado": v[5],
-            "nombre_categoria": v[6], # Ahora es el nombre
-            "nombre_tipo": v[7],      # Ahora es el nombre
-            "talla": v[8],
-            "comentario": v[9],
+            "id_categoria": v[6],
+            "nombre_categoria": v[7],
+            "id_tipo": v[8],
+            "nombre_tipo": v[9],
+            "talla": v[10],
+            "comentario": v[11],
         }
+
+        
 
     def cargar_inventario(self, articulos):
         self.table.delete(*self.table.get_children())
@@ -159,37 +148,12 @@ class InventarioActualWindow(tk.Toplevel):
         if texto == "":
             cursor.execute(query)
         else:   
-            query += " WHERE a.nombre LIKE %s OR a.talla LIKE %s"
-            cursor.execute(query, (f"%{texto}%", f"%{texto}%"))
+            query += " WHERE a.nombre LIKE %s OR t.tipo LIKE %s OR c.nombre_categoria LIKE %s  OR a.talla LIKE %s"
+            cursor.execute(query, (f"%{texto}%", f"%{texto}%", f"%{texto}%", f"%{texto}%"))
 
         articulos = cursor.fetchall()
         conn.close()
         self.cargar_inventario(articulos)
-
-
-
-#---------------FUNCIONES DE LOS CHECKBOX ---------------------------
-    def filtrar_por_estado(self):
-        estados = []
-        if self.var_apartado.get(): estados.append("apartado")
-        if self.var_vendido.get(): estados.append("vendido")
-
-        conn = conectar_db()
-        cursor = conn.cursor()
-        query = self._get_base_query()
-
-        if estados:
-            # Creamos los placeholders (%s, %s...) según la cantidad de estados
-            placeholders = ",".join(["%s"] * len(estados))
-            query += f" WHERE a.estado IN ({placeholders})"
-            cursor.execute(query, estados)
-        else:
-            cursor.execute(query)
-
-        articulos = cursor.fetchall()
-        conn.close()
-        self.cargar_inventario(articulos)
-
 
 
   # ======= FUNCIONES DE BOTONES =======
@@ -220,11 +184,10 @@ class InventarioActualWindow(tk.Toplevel):
         # Pasamos el ID y el modo       
         VendidoApartado(
             self,
-            modo="vender",
+            modo="vender", 
             articulo_id=self.articulo_seleccionado["id_articulo"],    
             on_save=self.refrescar_tabla
         ) 
-        
     
     def apartar(self):        
         if not self.articulo_seleccionado:            
@@ -238,7 +201,6 @@ class InventarioActualWindow(tk.Toplevel):
             on_save=self.refrescar_tabla
         )
         
-
     def borrar(self):
         if not self.articulo_seleccionado:
             messagebox.showwarning("Advertencia", "Seleccione un artículo.")
@@ -250,7 +212,7 @@ class InventarioActualWindow(tk.Toplevel):
         conn = conectar_db()
         cursor = conn.cursor()
         cursor.execute(
-            "DELETE FROM articulos WHERE id_articulo=%s",
+            "UPDATE articulos SET estado = 'eliminado' WHERE id_articulo=%s",
             (self.articulo_seleccionado["id_articulo"],)
         )
         conn.commit()
@@ -258,14 +220,8 @@ class InventarioActualWindow(tk.Toplevel):
 
         self.refrescar_tabla()
         self.articulo_seleccionado = None
-
-        
-
-        
+     
     def regresar(self):        
         self.master.deiconify()        
         self.destroy()
            
-
-        
-        

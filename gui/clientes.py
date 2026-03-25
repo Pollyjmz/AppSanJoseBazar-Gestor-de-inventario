@@ -70,7 +70,7 @@ class ClientesWindow(tk.Toplevel):
         cursor.execute("""
             SELECT id_cliente, nombre, telefono, email,
                talla_top, talla_bottom, talla_zapatos, signo_zodiacal, observaciones
-            FROM clientes""")
+            FROM clientes WHERE estado = 'activo'""")
         
         clientes = cursor.fetchall()
         conn.close()
@@ -100,7 +100,7 @@ class ClientesWindow(tk.Toplevel):
             cursor.execute("""
                 SELECT id_cliente, nombre, telefono, email,
                     talla_top, talla_bottom, talla_zapatos, signo_zodiacal, observaciones
-                FROM clientes
+                FROM clientes WHERE estado = 'activo'
             """)             
         else: 
             cursor.execute("""
@@ -159,7 +159,7 @@ class ClientesWindow(tk.Toplevel):
 
         conn = conectar_db()
         cursor = conn.cursor()
-        cursor.execute("DELETE FROM clientes WHERE id_cliente=%s", (self.cliente['id_cliente'],))
+        cursor.execute("UPDATE clientes SET estado = 'inactivo' WHERE id_cliente=%s", (self.cliente['id_cliente'],))
         conn.commit()
         conn.close()
 

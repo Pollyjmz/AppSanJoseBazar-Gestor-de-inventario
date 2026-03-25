@@ -5,7 +5,7 @@ def crear_conexion():
     return mysql.connector.connect(
         host="localhost",
         user="root",
-        password="xxxx"
+        password="Turmalina777"
     )
 
 def crear_base_datos():
@@ -50,6 +50,7 @@ def crear_tablas():
         talla_bottom VARCHAR(50),
         talla_zapatos VARCHAR(50),
         talla_top VARCHAR(50),
+        estado ENUM('activo', 'inactivo') DEFAULT 'activo',  
         observaciones TEXT           
     );
     """)
@@ -80,7 +81,7 @@ def crear_tablas():
         cantidad_disponible INT,
         id_vendedor INT NOT NULL,
         precio FLOAT,
-        estado ENUM('disponible', 'apartado', 'vendido') DEFAULT 'disponible',
+        estado ENUM('disponible', 'apartado', 'vendido', 'eliminado') DEFAULT 'disponible',
         id_categoria INT NOT NULL,
         id_tipo INT NOT NULL,
         talla VARCHAR(10),
@@ -228,6 +229,26 @@ def insertar_tipos():
     conexion.close()
     print("Tipos insertados correctamente.")   
 
+def insertar_articulo_pruebas():
+    conexion = conectar_db()
+    cursor = conexion.cursor()
+
+    articulos = [
+        ("Camisa de mezclilla", 10, 1, 250.0, "disponible", 1, 1, "M", "Camisa azul de mezclilla en buen estado."),
+        ("Vestido floral", 5, 2, 300.0, "disponible", 1, 10, "S", "Vestido largo con estampado floral."),
+        ("Zapatos deportivos", 8, 3, 400.0, "disponible", 1, 16, "42", "Zapatos deportivos en buen estado."),       
+        ("botella de agua", 20, 1, 100.0, "disponible", 2, 17, "M", "Botella de agua de 500ml en buen estado."),
+        ("otroejemplo", 15, 2, 150.0, "disponible", 2, 18, "L", "Otro artículo de prueba.")]
+    
+
+    for nombre, cantidad, id_vendedor, precio, estado, id_categoria, id_tipo, talla, comentario in articulos:
+        cursor.execute("""
+            INSERT INTO articulos (nombre, cantidad_disponible, id_vendedor, precio, estado, id_categoria, id_tipo, talla, comentario)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """, (nombre, cantidad, id_vendedor, precio, estado, id_categoria, id_tipo, talla, comentario))
+    conexion.commit()
+    cursor.close()
+    conexion.close()
      
     
 def recrear_base_datos():
@@ -256,7 +277,9 @@ def crear_apartar():
     print("Tabla de apartados creada correctamente.")
 
 if __name__ == "__main__":
-    crear_apartar()           
-    print("base de datos creada.")
+    
+   
+
+    print("")
 
 

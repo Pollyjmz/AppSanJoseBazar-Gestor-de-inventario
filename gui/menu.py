@@ -88,9 +88,9 @@ class MenuWindow(tk.Toplevel):
         self.boton_salir.pack(pady=20)
 
   # ---------------------------
-    # FUNCIONES PARA ABRIR VENTANAS
-    # ---------------------------
-
+  # FUNCIONES PARA ABRIR VENTANAS
+  # ---------------------------
+    
 
     def abrir_clientes(self):
         from gui.clientes  import ClientesWindow

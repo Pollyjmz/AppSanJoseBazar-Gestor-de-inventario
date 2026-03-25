@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from db import conectar_db
 
 class InventarioForm(tk.Toplevel):
-    # Ajustamos el init para que coincida con como lo llamas en inventario.py
+    
     def __init__(self, parent, articulo=None, on_save=None):
         super().__init__(parent)
         self.articulo = articulo  # Si es None, es "Agregar". Si tiene datos, es "Editar".
@@ -126,8 +126,8 @@ class InventarioForm(tk.Toplevel):
         # BOTONES
         btn_frame = ttk.Frame(self.scrollable_frame)
         btn_frame.pack(pady=20)
-        ttk.Button(btn_frame, text="💾 Guardar", command=self.guardar_articulo).pack(side="left", padx=10)
-        ttk.Button(btn_frame, text="❌ Cancelar", command=self.regresar).pack(side="left", padx=10)
+        ttk.Button(btn_frame, text=" Guardar", command=self.guardar_articulo).pack(side="left", padx=10)
+        ttk.Button(btn_frame, text=" Cancelar", command=self.regresar).pack(side="left", padx=10)
 
     # --- Helpers de UI ---
     def crear_campo(self, label):
@@ -158,32 +158,31 @@ class InventarioForm(tk.Toplevel):
                 col = 0
                 row += 1
 
-    # --- Lógica de Negocio ---
+    
     def cargar_datos(self):
-        # Rellenar campos con self.articulo
+        
         self.entry_codigo.config(state="normal")
         self.entry_codigo.insert(0, str(self.articulo["id_articulo"]))
         self.entry_codigo.config(state="readonly")
+
         self.entry_nombre.insert(0, self.articulo["nombre"])
         self.entry_cantidad.insert(0, str(self.articulo["cantidad_disponible"]))
         self.entry_precio.insert(0, str(self.articulo["precio"]))
-        self.entry_talla.insert(0, self.articulo["talla"] or "")
-        self.text_comentario.insert("1.0", self.articulo["comentario"] or "")
+        self.entry_talla.insert(0, self.articulo["talla"])
+
+        self.text_comentario.insert("1.0", self.articulo["comentario"])
         
-        # Combos y Radios
+        #vendedor
         vendedor_nombre = self.vendedores_inv.get(self.articulo["id_vendedor"])
         if vendedor_nombre: self.combo_emprendimiento.set(vendedor_nombre)
-        
+        #estado
         self.var_estado.set(self.articulo["estado"])
-        
-        cat_nombre = self.categorias_inv.get(self.articulo["id_categoria"], "Prenda")
-        self.var_categoria.set(cat_nombre)
-        self.actualizar_tipos_ui() # Refrescar tipos disponibles
-        
-        # Seleccionar el tipo específico
-        tipo_map = self.tipos_inv.get(self.articulo["id_categoria"], {})
-        tipo_nombre = tipo_map.get(self.articulo["id_tipo"])
-        if tipo_nombre: self.var_tipo.set(tipo_nombre)
+        # categoria por ID
+        self.var_categoria.set(self.articulo["id_categoria"])
+        self.actualizar_tipos_ui()
+
+        # tipo por ID
+        self.var_tipo.set(self.articulo["id_tipo"])
 
     def guardar_articulo(self):
         # 1. Obtener datos
@@ -220,7 +219,7 @@ class InventarioForm(tk.Toplevel):
 
         try:
             if self.articulo: 
-                # === ACTUALIZAR (UPDATE) ===
+                # === ACTUALIZAR  ===
                 query = """
                     UPDATE articulos
                     SET nombre=%s, cantidad_disponible=%s, precio=%s, talla=%s, 

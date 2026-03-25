@@ -12,10 +12,12 @@ class VentasWindow(tk.Toplevel):
         self.title("Ventas")
         self.center_window(787, 586)
         self.resizable(True, True)
+        self.grab_set()
+        self.focus_force()
 
         frame = ttk.Frame(self, padding=20)
         frame.pack(expand=True)
-
+        
         # Título
         self.label_title = tk.Label(
             frame,
@@ -26,11 +28,27 @@ class VentasWindow(tk.Toplevel):
 
         # Entradas para las fechas
         ttk.Label(frame, text="Desde:", font=("Segoe UI", 12)).grid(row=1, column=0, sticky="w", pady=10)
-        self.fecha_inicio = DateEntry(frame, width=27, background="#AAF0D1", foreground="white", borderwidth=2, date_pattern="yyyy-mm-dd")
+        self.fecha_inicio = DateEntry(
+            frame, 
+            width=27, 
+            background="#AAF0D1", 
+            foreground="black", 
+            borderwidth=2, 
+            date_pattern="yyyy-mm-dd",
+            state="readonly"
+            )
         self.fecha_inicio.grid(row=1, column=1, pady=10)
         
         ttk.Label(frame, text="Hasta:", font=("Segoe UI", 12)).grid(row=2, column=0, sticky="w", pady=10)
-        self.fecha_fin = DateEntry(frame, width=27, background="#AAF0D1", foreground="white", borderwidth=2, date_pattern="yyyy-mm-dd")
+        self.fecha_fin = DateEntry(
+            frame,  
+            width=27,
+            background="#AAF0D1", 
+            foreground="black", 
+            borderwidth=2, 
+            date_pattern="yyyy-mm-dd",
+            state="readonly" 
+            )
         self.fecha_fin.grid(row=2, column=1, pady=10)
 
         # Botones pack
@@ -41,7 +59,7 @@ class VentasWindow(tk.Toplevel):
         btn_generar.pack(side="left", padx=10)
         btn_volver = ttk.Button(bottom_frame, text="Generar Informe", command=self.generar_informe)
         btn_volver.pack(side="left", padx=10)
-
+        
 
     def center_window(self, width, height):
         """Centra la ventana en la pantalla."""
@@ -55,16 +73,17 @@ class VentasWindow(tk.Toplevel):
         self.master.deiconify()    
         self.destroy()    
 
- # En ventas.py
+ 
     def generar_informe(self):
         fecha_inicio = self.fecha_inicio.get()
         fecha_fin = self.fecha_fin.get()
+        print(fecha_inicio, fecha_fin)
 
         conn = conectar_db()
-        cursor = conn.cursor() # Si usas dictionary=True es más fácil
+        cursor = conn.cursor() 
 
         try:
-            # Mejoramos la consulta para traer el nombre del artículo
+            
             query = """
                 SELECT v.fecha, a.nombre, v.cantidad, v.precio_vendido, v.total
                 FROM ventas v

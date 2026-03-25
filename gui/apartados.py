@@ -106,7 +106,7 @@ class apartadosWindow(tk.Toplevel):
         conn = conectar_db()
         cursor = conn.cursor()
         
-        # Base de la consulta con el JOIN necesario
+        # Base de la consulta con el JOIN para obtener el nombre del cliente
         query_base = """
             SELECT ap.id_apartado, ap.id_cliente, cl.nombre, ap.fecha, ap.cantidad, ap.total
             FROM apartados ap
@@ -207,11 +207,11 @@ class apartadosWindow(tk.Toplevel):
             return 
         from gui.vendido_apartado import VendidoApartado
         
-        # Necesitas pasarle el ID del artículo asociado al apartado
+        
         VendidoApartado(
             self, 
             modo="apartar", 
-            articulo_id=self.apartado["id_articulo"], # Asegúrate que este campo venga en tu query
+            articulo_id=self.apartado["id_articulo"],
             on_save=self.refrescar_tabla
         )
       

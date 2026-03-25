@@ -11,7 +11,7 @@ class ClientesForm(tk.Toplevel):
         self.on_save = on_save
                                                                                                                                                                                                                                
         self.title("Formulario de Cliente")
-        self.geometry("792x944")
+        self.geometry("650x605")
         self.config(bg="#EFEFEF")
 
         self.protocol("WM_DELETE_WINDOW", self.regresar)

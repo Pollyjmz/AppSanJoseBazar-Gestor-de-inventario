@@ -14,7 +14,8 @@ class VendidoApartado(tk.Toplevel):
         super().__init__(master)
 
         self.modo = modo   # "vender" | "apartar"
-        self.articulo_id = articulo_id
+        self.articulo_id = articulo_id 
+              
         self.on_save = on_save
 
         self.titulo_texto = "Vender Artículo" if modo == "vender" else "Apartar Artículo"
@@ -83,7 +84,7 @@ class VendidoApartado(tk.Toplevel):
                 FROM articulos
                 WHERE id_articulo = %s
                 """,
-                (self.articulo_id,)
+                (self.articulo_id,) 
             )
             articulo = cursor.fetchone()
             conn.close()
@@ -100,12 +101,15 @@ class VendidoApartado(tk.Toplevel):
             self.destroy()
             return None
 
+    
+    
     # ======================================================
     def cargar_clientes(self):
+
         try:
             conn = conectar_db()
             cursor = conn.cursor()
-            cursor.execute("SELECT id_cliente, nombre FROM clientes")
+            cursor.execute("SELECT id_cliente, nombre FROM clientes WHERE estado != 'inactivo'")
             clientes = cursor.fetchall()
             conn.close()
 
@@ -120,6 +124,57 @@ class VendidoApartado(tk.Toplevel):
             messagebox.showerror("Error DB", f"No se pudieron cargar clientes: {e}")
 
     # ======================================================
+        # def Querys de guardar
+    def apartar(self, cursor):           
+        sql = """
+            INSERT INTO apartados
+            (id_vendedor, id_cliente, id_articulo, fecha, precio_apartado, cantidad, total)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """
+        valores = (
+                self.articulo['id_vendedor'],
+                self.cliente_id,
+                self.articulo_id,
+                datetime.now().date(),
+                self.precio,
+                self.cantidad,
+                self.precio * self.cantidad
+            )
+
+        cursor.execute(sql, valores)
+
+    def vender(self, cursor):        
+        sql = """
+            INSERT INTO ventas
+            (id_vendedor, id_cliente, id_articulo, fecha, precio_vendido, cantidad, total)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """
+        valores = (
+            self.articulo["id_vendedor"],
+            self.cliente_id,
+            self.articulo_id,
+            datetime.now().date(),
+            self.precio,
+            self.cantidad,
+            self.precio * self.cantidad
+        )
+
+        cursor.execute(sql, valores)
+
+    def actualizar_stock(self, cursor):
+        sql = """
+            UPDATE articulos
+            SET cantidad_disponible = cantidad_disponible - %s,
+                estado = CASE
+                    WHEN cantidad_disponible - %s <= 0 THEN 'vendido'
+                    ELSE 'disponible'
+                END
+            WHERE id_articulo = %s
+
+        """
+        cursor.execute(sql, (self.cantidad,self.cantidad, self.articulo_id))    
+
+                   
     def guardar(self):
             try:
                 #1. Validaciones ---------------
@@ -141,68 +196,29 @@ class VendidoApartado(tk.Toplevel):
                 if cantidad <= 0:
                     messagebox.showerror("Error", "Cantidad inválida")
                     return
-
                 if cantidad > self.articulo["cantidad_disponible"]:
                     messagebox.showerror("Error", "No hay suficiente stock")
                     return
+                
+                self.cantidad = cantidad
+                self.precio = precio
+                self.cliente_id = cliente_id    
 
-                #2. conectar DB ----------------
-                cliente_id = self.clientes_map[self.combo_cliente.get()]    
+
+                #2. conectar DB ----------------                 
                 conn = conectar_db()
                 cursor = conn.cursor()
-                id_vendedor = self.articulo["id_vendedor"]
-                fecha_actual = datetime.now().strftime("%Y-%m-%d")
-                total = cantidad * precio
+                
 
                 # ===== APARTAR =====
                 if self.modo == "apartar":
-                    cursor.execute("""
-                        INSERT INTO apartados
-                        (id_vendedor, id_cliente, id_articulo, fecha, precio_apartado, cantidad, total)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        id_vendedor,
-                        cliente_id,
-                        self.articulo_id,                            
-                        datetime.now().date(),
-                        precio,
-                        cantidad,
-                        cantidad * precio
-                    ))
-
-                    cursor.execute("""
-                        UPDATE articulos
-                        SET cantidad_disponible = cantidad_disponible - %s,
-                            estado = 'apartado'
-                        WHERE id_articulo = %s
-                    """, (cantidad, self.articulo_id))
-
+                    self.apartar(cursor)
+                    self.actualizar_stock(cursor)    
                 # ===== VENDER =====
                 elif self.modo == "vender":
-                    cursor.execute("""
-                        INSERT INTO ventas
-                        (id_vendedor, id_cliente,id_articulo, fecha,
-                        precio_vendido, cantidad, total)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s)
-                    """, (
-                        id_vendedor,
-                        cliente_id,    
-                        self.articulo_id,
-                        datetime.now().date(),
-                        precio,
-                        cantidad,
-                        cantidad * precio,
-                        
-                    ))
-
-                    cursor.execute("""
-                        UPDATE articulos
-                        SET cantidad_disponible = cantidad_disponible - %s,
-                            estado = 'vendido'
-                        WHERE id_articulo = %s
-                    """, (cantidad, self.articulo_id))
-
-                # ===== FINAL =====
+                    self.vender(cursor)
+                    self.actualizar_stock(cursor)   
+                    
                 conn.commit()
                 conn.close()
 
